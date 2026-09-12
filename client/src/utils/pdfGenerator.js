@@ -270,45 +270,45 @@ export async function generateAuditCertificatePDF(result) {
   const checksList = [
     {
       num: "01",
-      name: "Document Type Classifier",
-      pass: checks.documentType !== false,
-      detail: `Detected: ${formatDocName(effectiveDetected)}${detectionConfidence ? ` (${detectionConfidence}% match)` : ""}`
-    },
-    {
-      num: "02",
-      name: "OCR & Structure Validation",
-      pass: checks.ocr,
-      detail: checks.ocr ? "OCR field tokens parsed & structure validated" : "Low OCR token confidence"
-    },
-    {
-      num: "03",
-      name: "Format & Checksum Rules",
-      pass: checks.format,
-      detail: checks.format ? "Algorithmic checksum & regex structure valid" : "Invalid checksum format"
-    },
-    {
-      num: "04",
-      name: "QR / Barcode Payload Match",
+      name: "QR / Barcode Payload Match [CRITICAL SECURITY]",
       pass: checks.qr,
       detail: checks.qr ? "QR matrix cryptographically matches text fields" : "No valid QR code or QR payload mismatch"
     },
     {
-      num: "05",
-      name: "Template & Aspect Ratio",
-      pass: checks.template,
-      detail: checks.template ? "Official aspect ratio & font layout within bounds" : "Non-standard aspect ratio or margins"
+      num: "02",
+      name: "Issuer Registry Sync [AUTHORITATIVE]",
+      pass: checks.issuer,
+      detail: issuerDetails?.issuer ? `${issuerDetails.issuer} (${issuerDetails.status || "Active Sync"})` : "Issuer directory check complete"
     },
     {
-      num: "06",
-      name: "Tamper ELA Analysis",
+      num: "03",
+      name: "Tamper ELA Analysis [HIGH SECURITY]",
       pass: checks.tampering,
       detail: checks.tampering ? "Error Level Analysis shows no localized edits" : "Potential pixel tampering / copy-paste detected"
     },
     {
+      num: "04",
+      name: "Format & Checksum Rules [HIGH SECURITY]",
+      pass: checks.format,
+      detail: checks.format ? "Algorithmic checksum & regex structure valid" : "Invalid checksum format"
+    },
+    {
+      num: "05",
+      name: "Document Type Classifier [STANDARD]",
+      pass: checks.documentType !== false,
+      detail: `Detected: ${formatDocName(effectiveDetected)}${detectionConfidence ? ` (${detectionConfidence}% match)` : ""}`
+    },
+    {
+      num: "06",
+      name: "OCR & Structure Validation [STANDARD]",
+      pass: checks.ocr,
+      detail: checks.ocr ? "OCR field tokens parsed & structure validated" : "Low OCR token confidence"
+    },
+    {
       num: "07",
-      name: "Issuer Registry Sync",
-      pass: checks.issuer,
-      detail: issuerDetails?.issuer ? `${issuerDetails.issuer} (${issuerDetails.status || "Active Sync"})` : "Issuer directory check complete"
+      name: "Template & Aspect Ratio [STANDARD]",
+      pass: checks.template,
+      detail: checks.template ? "Official aspect ratio & font layout within bounds" : "Non-standard aspect ratio or margins"
     }
   ];
 

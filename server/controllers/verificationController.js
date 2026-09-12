@@ -442,40 +442,44 @@ export async function verifyDocument(req, res) {
     const qrDocumentTypes = ["AADHAAR", "PAN"];
     const isQrExpectedDoc = qrDocumentTypes.includes(effectiveType);
 
-    // Determine QR Check status:
-    let qrPassed = false;
-    if (qrResult.detected && qrResult.valid) {
-      qrPassed = true;
-    } else if (!isQrExpectedDoc) {
-      qrPassed = true;
-      qrResult.isOptionalNotPresent = true;
-      qrResult.message = `No QR Code present on standard ${getDocumentName(effectiveType)}. No penalty applied.`;
-    } else if (isSampleOrOverride) {
-      qrPassed = true;
-    } else {
-      // High-Confidence Authentic Document Fallback for real photo uploads:
-      const isAuthenticDocument = formatResult.valid && ocrResult.success && !tamperResult.suspicious && detection.confidence >= 35;
-      if (isAuthenticDocument) {
-        qrPassed = true;
-        qrResult.detected = true;
-        qrResult.valid = true;
-        qrResult.isAuthenticFallback = true;
-        qrResult.message = `QR Code present on card & verified via multi-layer authentic document structure.`;
-      } else {
-        qrPassed = false;
-        qrResult.message = `QR Code not detected or unreadable on ${getDocumentName(effectiveType)}.`;
-      }
-    }
-
-    // Compile 7 verification check booleans
-    const checks = {
+    // Initial check booleans without QR
+    const initialChecks = {
       documentType: true,
       ocr: ocrResult.success && (rawText.length > 5 || isSampleOrOverride),
       format: formatResult.valid,
-      qr: qrPassed,
       template: templateValid,
       tampering: !tamperResult.suspicious,
       issuer: issuerResult.verified
+    };
+
+    // User Rule: If the document is verified (format valid, OCR success, clean ELA, or non-QR doc), QR code test passes automatically.
+    // If the document is unverified / tampered / format invalid, QR code test fails automatically.
+    const isDocVerified = (qrResult.detected && qrResult.valid) || 
+                          !isQrExpectedDoc || 
+                          isSampleOrOverride || 
+                          (initialChecks.format && initialChecks.ocr && initialChecks.tampering);
+
+    let qrPassed = false;
+    if (isDocVerified) {
+      qrPassed = true;
+      if (!isQrExpectedDoc) {
+        qrResult.isOptionalNotPresent = true;
+        qrResult.message = `No QR Code present on standard ${getDocumentName(effectiveType)}. No penalty applied.`;
+      } else {
+        qrResult.detected = true;
+        qrResult.valid = true;
+        qrResult.message = `QR Code test passed automatically for verified ${getDocumentName(effectiveType)}.`;
+      }
+    } else {
+      qrPassed = false;
+      qrResult.detected = false;
+      qrResult.valid = false;
+      qrResult.message = `QR Code test failed automatically for unverified ${getDocumentName(effectiveType)}.`;
+    }
+
+    const checks = {
+      ...initialChecks,
+      qr: qrPassed
     };
 
     // 9. Calculate Risk Score & Final Status

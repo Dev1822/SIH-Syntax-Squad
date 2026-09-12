@@ -46,6 +46,7 @@ export default function VerificationCard({ result, documentImage }) {
     checks = {},
     extractedData = {},
     tamperDetails = {},
+    qrDetails = dataObj.qrDetails || result.qrDetails || {},
     issuerDetails = {},
     penalties = []
   } = dataObj;
@@ -63,17 +64,47 @@ export default function VerificationCard({ result, documentImage }) {
   const effectiveDetected = detectedType || documentType;
   const checksList = [
     { 
+      key: "qr", 
+      label: t('verCard.chk4', 'QR Code Security Match'), 
+      priority: qrDetails?.isOptionalNotPresent ? "NO QR CODE" : "CRITICAL SECURITY", 
+      pass: checks.qr 
+    },
+    { 
+      key: "issuer", 
+      label: t('verCard.chk7', 'Official Issuer Verification'), 
+      priority: "AUTHORITATIVE", 
+      pass: checks.issuer 
+    },
+    { 
+      key: "tampering", 
+      label: t('verCard.chk6', 'Tampering Analysis (ELA)'), 
+      priority: "HIGH SECURITY", 
+      pass: checks.tampering 
+    },
+    { 
+      key: "format", 
+      label: t('verCard.chk3', 'Format & Algorithmic Checksum'), 
+      priority: "HIGH SECURITY", 
+      pass: checks.format 
+    },
+    { 
       key: "documentType", 
-      label: `${t('verCard.chk1', '1. Document Type Detection')} (${formatDocName(effectiveDetected)}${detectionConfidence ? ` • ${detectionConfidence}%` : ""})`, 
-      priority: "STANDARD",
+      label: `${t('verCard.chk1', 'Document Type Detection')} (${formatDocName(effectiveDetected)}${detectionConfidence ? ` • ${detectionConfidence}%` : ""})`, 
+      priority: "STANDARD", 
       pass: checks.documentType !== false 
     },
-    { key: "ocr", label: t('verCard.chk2', '2. OCR / Data Extraction'), priority: "STANDARD", pass: checks.ocr },
-    { key: "format", label: t('verCard.chk3', '3. Format & Algorithmic Checksum'), priority: "HIGH SECURITY", pass: checks.format },
-    { key: "qr", label: t('verCard.chk4', '4. QR Code Security Match'), priority: "CRITICAL SECURITY", pass: checks.qr },
-    { key: "template", label: t('verCard.chk5', '5. Template & Proportions Check'), priority: "STANDARD", pass: checks.template },
-    { key: "tampering", label: t('verCard.chk6', '6. Tampering Analysis (ELA)'), priority: "HIGH SECURITY", pass: checks.tampering },
-    { key: "issuer", label: t('verCard.chk7', '7. Official Issuer Verification'), priority: "AUTHORITATIVE", pass: checks.issuer }
+    { 
+      key: "ocr", 
+      label: t('verCard.chk2', 'OCR / Data Extraction'), 
+      priority: "STANDARD", 
+      pass: checks.ocr 
+    },
+    { 
+      key: "template", 
+      label: t('verCard.chk5', 'Template & Proportions Check'), 
+      priority: "STANDARD", 
+      pass: checks.template 
+    }
   ];
 
   const downloadJsonReport = () => {
